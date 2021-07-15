@@ -1,0 +1,81 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'bootstrap-5.0.2-dist/css/bootstrap.min.css' %}" rel="stylesheet" >
+    <link href="{% static 'custom/css/styles.css' %}" rel="stylesheet" >
+
+    <title>
+      {% block title %}
+        Codeblog - providing upto date programming articles.
+      {% endblock %}
+    </title>
+  </head>
+  <body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'all-articles' %}">CodeCraft</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse flex-grow-1 text-right" id="navbarSupportedContent">
+          <ul class="navbar-nav flex-nowrap mb-2 mb-lg-0">
+            <li class="nav-item dropdown align-items-start">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Articles
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item" href="{% url 'all-articles' %}"><img width="14px" height="14px" src="{% static 'bootstrap-icons/list.svg' %}"> List</a></li>
+                {% if request.user.is_authenticated %}
+                <li><a class="dropdown-item" href="{% url 'add-article'%}"><img width="14px" height="14px" src="{% static 'bootstrap-icons/plus-square.svg' %}"> New</a></li>
+                <li><a class="dropdown-item" href="{% url 'get-user-articles' request.user.username %}"><img width="14px" height="14px" src="{% static 'bootstrap-icons/person.svg' %}"> Your articles</a></li>
+                {% endif %}
+              </ul>
+            </li>
+            {% if request.user.is_authenticated %}
+            <li class="nav-item dropdown align-items-end" style="text-align: right;">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkProfile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <img width="30px" height="30px" class="img-fluid rounded-circle" src="{{ request.user.useravatar.avatar.url }}"> <span class="ps-1">{{ request.user.username }}</span>
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkProfile">
+                <li><a class="dropdown-item" href="{% url 'profile' request.user.username %}"><img width="14px" height="14px" src="{% static 'bootstrap-icons/person.svg' %}"> Profile</a></li>
+                <li><a class="dropdown-item" href="{% url 'signout' %}"><img width="14px" height="14px" src="{% static 'bootstrap-icons/x-circle.svg' %}"> Logout</a></li>
+              </ul>
+            </li>
+            {% else %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Account
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkMenu">
+                <li><a class="dropdown-item" href="{% url 'signin' %}"><img width="14px" height="14px" src="{% static 'bootstrap-icons/box-arrow-right.svg' %}"> Login</a></li>
+                <li><a class="dropdown-item" href="{% url 'signup' %}"><img width="14px" height="14px" src="{% static 'bootstrap-icons/person-plus.svg' %}"> Sign Up </a></li>
+              </ul>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      {% block content %}
+        <p>My base content</p>
+      {% endblock %}
+    </div>
+
+    <script src="{% static 'bootstrap-5.0.2-dist/js/jquery-3.6.0.min.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    <script src="{% static 'custom/js/csrf.js' %}"></script>
+
+    {% block javascript %}
+    {% endblock %}
+
+  </body>
+</html>

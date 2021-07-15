@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+
+{% block content %}
+<div class="row mt-5">
+  {% if article_found %}
+  <div class="col-sm-12 col-md-12 col-lg-2 col-xl-2"></div>
+  <div class="col-sm-12 col-md-12 col-lg-8 col-xl-8 view-article">
+
+    <!-- Message and error alert display -->
+    {% if messages %}
+    <div class="alert alert-primary" role="alert">
+      {% for msg in messages %}
+      <p>{{ msg }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div id="alert-article-msg" class="alert alert-danger pb-4 d-none" role="alert"></div>
+
+    <!--Display select article (title, subtitle, content etc -->
+    <div class="p-3 mb-2 bg-white text-dark">
+      <h2 id="article-title" class="cust_text ">{{ title }}</h2>
+      <h5 id="article-subtitle" class="text-muted">{{ subtitle }}</h5>
+      <div class="d-flex flex-row">
+        <div class="comment-image">
+          <img width="30px" height="30px" class="img-fluid rounded-circle "
+               src="{{ created_by.useravatar.avatar.url }}">
+        </div>
+        <div class="comment-text">
+          <span class="sm_font pe-2 text-muted"><a href="{% url 'profile' created_by.username %}">{{ created_by.first_name }} {{ created_by.last_name }}</a> in <span
+                  id="article-category"><a
+                  href="{% url 'get-articles-by-cat' category %}"> {{ category }}</a></span></span>
+
+          <img width="14px" height="14px" src="{% static 'bootstrap-icons/calendar.svg' %}">
+          <span id="article-updated-at" class="sm_font ps-2 text-muted">Last updated: {{ updated_at }}</span>
+          {% if request.user.username == created_by.username %}
+          <span>
+              <img data-slug="{{ slug }}" id="edit-article-icon" style="cursor: pointer;" width="20px" height="20px"
+                   src="{% static 'bootstrap-icons/pencil-square.svg' %}">
+              <img data-slug="{{ slug }}" id="save-article-icon" class="d-none" style="cursor: pointer;" width="20px"
+                   height="20px" src="{% static 'bootstrap-icons/save.svg' %}">
+              <img data-slug="{{ slug }}" id="close-article-icon" class="d-none" style="cursor: pointer;" width="20px"
+                   height="20px" src="{% static 'bootstrap-icons/x-square.svg' %}">
+            </span>
+          {% endif %}
+        </div>
+      </div>
+      <div>
+
+        <div class="mt-4 mb-4">
+          <img id="article-cover-image"  class="img-fluid" src="{{ cover_image.url }}" alt="{{ title }}">
+        </div>
+        <div id="change-image" class="d-none">
+          <button data-bs-toggle="modal" data-bs-target="#image_modal" type="button" class="btn btn-sm btn-secondary">Change Image</button>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="image_modal" tabindex="-1" aria-labelledby="image_modalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-body">
+                <!--File input-->
+                <form id="article-image-form" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <div class="input-group">
+                    {{ form.cover_image }}
+                    <button class="btn btn-outline-secondary" type="submit" id="inputGroup">Upload</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="article-content" class="mt-4">
+        {{ content }}
+      </div>
+
+
+      <!--We need the list of categories since this HTML elememts are used for both displaying and editing the article
+        During editing mode, user should be able to select a different category for the article
+      -->
+      <div id="category-div" class="mt-4 mb-4 d-none">
+        <select id="select-article-category" class="form-select form-select-sm" aria-label="Default select example">
+          {% for cat in categories %}
+          {% if cat == category %}
+          <option selected value="{{cat.category_id}}">{{cat.category}}</option>
+          {% else %}
+          <option value="{{cat.category_id}}">{{cat.category}}</option>
+          {% endif %}
+
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!--A comment form for adding comment is displayed
+      Comment is added via ajax so as not to reload the page
+    -->
+    <div class="p-3 mb-2 bg-white text-dark">
+      <hr>
+
+      <div id="alert-comment-msg" class="alert alert-danger pb-4 d-none" role="alert"></div>
+
+      {% if request.user.is_authenticated %}
+      <form id="comment-form">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="commentTextAarea" class="form-label"><h5>{% if comments %} Add your comment {% else %} Be the
+            first to add a comment {% endif %}</h5></label>
+          {{ add_comment_form.as_p }}
+        </div>
+        <button type="submit" id="submit_comment" class="btn btn_color">Save</button>
+      </form>
+      {% else %}
+        <div class="alert alert-primary" role="alert">
+          <a href="{% url 'signin' %}">Login to add comment.</a>
+        </div>
+      {% endif %}
+
+      <!--Display list of comments for this article. -->
+      <span id="comment-area-span">
+        <div class="mt-5 accordion" id="accordionPanelsStayOpenExample">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true"
+                      aria-controls="panelsStayOpen-collapseOne">
+                <h5>Comments <span class="badge bg-secondary">{{ comments.count }}</span> </h5>
+              </button>
+            </h2>
+            <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show"
+                 aria-labelledby="panelsStayOpen-headingOne">
+              <div class="accordion-body" id="comment-area">
+                {% for comment in comments %}
+                  <div class="d-flex pt-2" id="comment-{{ comment.comment_id }}-div-area">
+                    <div class="comment-image">
+                      <img width="30px" height="30px" class="img-fluid rounded-circle"
+                           src="{{ comment.created_by.useravatar.avatar.url }}">
+                      </div>
+                      <div class="comment-text">
+                        <h5 class="comment-name ps-2"><a href="{% url 'profile' comment.created_by.username %}">{{ comment.created_by.first_name }} {{ comment.created_by.last_name }} </a></h5>
+                        <p id="comment-{{ comment.comment_id }}" class="card-text ps-2">{{ comment.comment }}</p>
+                        <p class="card-text ps-2">
+                          <small id="comment-{{ comment.comment_id }}-updated_at" class="text-muted">Last updated: {{ comment.updated_at}}</small>
+                          {% if request.user.username == comment.created_by.username %}
+                          <span>
+                            <img data-comment="comment-{{ comment.comment_id }}"
+                                 id="comment-{{ comment.comment_id }}-edit-icon" class="edit-comment-icon"
+                                 style="cursor: pointer;" width="20px" height="20px"
+                                 src="{% static 'bootstrap-icons/pencil-square.svg' %}">
+
+                            <img data-comment="comment-{{ comment.comment_id }}" data-id="{{ comment.comment_id }}"
+                                 data-comment="comment-{{ comment.comment_id }}"
+                                 id="comment-{{ comment.comment_id }}-save-icon" class="save-comment-icon d-none"
+                                 style="cursor: pointer;" width="20px" height="20px"
+                                 src="{% static 'bootstrap-icons/save.svg' %}">
+                            <img data-comment="comment-{{ comment.comment_id }}" data-id="{{ comment.comment_id }}"
+                                 id="comment-{{ comment.comment_id }}-close-icon" class="close-comment-icon d-none"
+                                 style="cursor: pointer;" width="20px" height="20px"
+                                 src="{% static 'bootstrap-icons/x-square.svg' %}">
+
+                            <img data-comment="comment-{{ comment.comment_id }}"
+                                 id="comment-{{ comment.comment_id }}-delete-comment-icon" class="delete-comment-icon"
+                                 style="cursor: pointer;" width="20px" height="20px"
+                                 src="{% static 'bootstrap-icons/trash.svg' %}">
+                            <span class="d-none" id="comment-{{ comment.comment_id }}-confirm-comment-delete">
+                              Are you sure?
+                              <button data-id="{{ comment.comment_id }}" id="comment-{{ comment.comment_id }}-delete-comment-button" data-comment="comment-{{ comment.comment_id }}" type="button" class="btn btn-danger btn-sm delete-comment-button">Yes</button>
+                              <button id="comment-{{ comment.comment_id }}-cancel-delete-comment-button" data-comment="comment-{{ comment.comment_id }}" type="button" class="btn btn-secondary btn-sm cancel-delete-comment-button">Cancel</button>
+                            </span>
+
+                          </span>
+                          {% endif %}
+                        </p>
+
+                      </div>
+
+                  </div>
+                  <hr id="comment-{{ comment.comment_id }}-hr">
+                {% endfor %}
+              </div>
+
+              <!--Pagination is used.
+              TODO: Change to ajax so page is not refreshed after user clicks the pagination button
+              -->
+              <div class="mt-4 ps-4">
+                <nav aria-label="Page navigation example">
+                  <ul class="pagination">
+                  {% if page_obj.has_previous %}
+
+                  <li class="page-item">
+                    <a class="page-link" href="?page=1">
+                      <img style="cursor: pointer;" width="20px" height="20px"
+                           src="{% static 'bootstrap-icons/skip-start.svg' %}">
+                    </a>
+                  </li>
+
+
+                  <li>
+                    <a class="page-link" href="?page=1">
+                      <img style="cursor: pointer;" width="20px" height="20px"
+                           src="{% static 'bootstrap-icons/arrow-left-square.svg' %}">
+                    </a>
+                  </li>
+                  {% endif %}
+
+
+                  <li class="page-item"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+
+                  {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                      <img style="cursor: pointer;" width="20px" height="20px"
+                           src="{% static 'bootstrap-icons/arrow-right-square.svg' %}">
+                    </a>
+                  </li>
+
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                      <img style="cursor: pointer;" width="20px" height="20px"
+                           src="{% static 'bootstrap-icons/skip-end.svg' %}">
+                    </a>
+                  </li>
+
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+            </div>
+          </div>
+        </div>
+      </span>
+    </div>
+  </div>
+
+  <div class="col-sm-12 col-md-12 col-lg-2 col-xl-2"></div>
+</div>
+{% else %}
+<div class="col-sm-12 col-md-12 col-lg-2 col-xl-2"></div>
+
+<!--Display message if article is not found-->
+<div class="col-sm-12 col-md-12 col-lg-8 col-xl-8">
+  <div class="alert alert-primary" role="alert">
+    <div class="text-muted text-center pb-5"><img style="color: blue;" width="300px" height="300px"
+                                                  src="{% static 'bootstrap-icons/emoji-frown.svg' %}"></div>
+    <h4 class="alert-heading">ARTICLE NOT FOUND!!!</h4>
+    <p> Sorry, an article with entered slug is not found in our database. Be sure you have entered the correct slug</p>
+    <hr>
+    <p>Click on this <a href="{% url 'all-articles' %}">link</a> to visit the list of articles</p>
+
+  </div>
+</div>
+<div class="col-sm-12 col-md-12 col-lg-2 col-xl-2"></div>
+{% endif %}
+</div>
+
+
+{% endblock %}
+
+{% block javascript %}
+
+<script>
+    var edit_article_url = '{% url 'edit-article' slug %}'
+    var update_article_url = '{% url 'update-article-image' slug %}'
+    var add_comment_url = '{% url 'add-comment' slug request.user %}'
+    var edit_comment_url = '{% url 'edit-comment' 1234 %}'
+    var delete_comment_url = '{% url 'delete-comment' 1234 %}'
+
+    //icon src
+    var trash = '{% static 'bootstrap-icons/trash.svg' %}'
+    var close = '{% static 'bootstrap-icons/x-square.svg' %}'
+    var save = '{% static 'bootstrap-icons/save.svg' %}'
+    var edit = '{% static 'bootstrap-icons/pencil-square.svg' %}'
+
+    //logged-in user avatar
+    var avatar = '{{ request.user.useravatar.avatar.url }}'
+
+
+
+</script>
+
+<script src="{% static 'custom/js/articles.js' %}"></script>
+<script src="{% static 'custom/js/comments.js' %}"></script>
+
+<script type="text/javascript">
+
+
+/* Comment event Handling begins*/
+
+
+
+
+
+
+
+
+
+</script>
+
+{% endblock %}

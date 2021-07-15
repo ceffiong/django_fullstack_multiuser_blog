@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+{{ user.first_name }} {{user.last_name}} Profile
+{% endblock %}
+
+
+{% block content %}
+
+<div class="row mt-5">
+  <div class="col-md-4 d-flex flex-column align-items-center">
+    <!--User avatar-->
+    <img style="background-color: #f2f2f2;" width="250px" height="250px" class="rounded-circle"
+         src="{{ user.useravatar.avatar.url }}">
+
+    <!--<span class="pt-3">
+          <img class="me-2" id="edit-avatar" class="edit-comment-icon" width="20px" height="20px"
+               style="cursor: pointer;" src="{% static 'bootstrap-icons/pencil-square.svg' %}">
+          <img class="d-none" id="close-avatar" class="edit-comment-icon" width="20px" height="20px"
+               style="cursor: pointer;" src="{% static 'bootstrap-icons/x-square.svg' %}">
+        </span>
+
+
+    <form id="avatar-form" class="d-none" action="{% url 'profile' user.username %}" method="post"
+          enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mt-2 mb-2 input-group-sm">
+        {{ form.avatar }}
+      </div>
+      <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+      <button type="reset" class="btn btn-danger btn-sm">Close</button>
+    </form> -->
+
+
+    <!--Display flash messages -->
+    {% if messages %}
+    <div class="alert alert-primary" role="alert">
+      {% for msg in messages %}
+      <p>{{ msg }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+
+  <div class="col-md-6 pt-4 ms-3 profile-custom">
+
+    <!-- Be nice, greet the user -->
+    {%if request.user.username == user.username %}
+    <h1 class="cust_text profile-heading ps-3">Good <span id="greet"></span>, {{ request.user.first_name }}</h1>
+    {% else %}
+    <h1 class="cust_text profile-heading ps-3"> {{ user.first_name }} profile</h1>
+    {% endif %}
+
+    <div class="pt-4">
+      <!--Show error from ajax -->
+      <div id="alert-msg" class="alert alert-danger pb-4 d-none" role="alert">
+      </div>
+
+      <!--Display user info-->
+      <div class="accordion accordion-flush" id="accordionFlushExample">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="flush-headingOne">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+              PERSONAL INFORMATION
+            </button>
+          </h2>
+          <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne">
+            <div class="accordion-body">
+              <table class="table table-borderless">
+                <tbody>
+                <tr>
+                  <td class="ps-0 td_width text-muted">First name:</td>
+                  <td id="first-name" class="ps-0">{{ user.first_name }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-0 text-muted">Last name:</td>
+                  <td id="last-name" class="ps-0">{{ user.last_name }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-0 text-muted">Email:</td>
+                  <td id="email" class="ps-0"><a href="mailto:{{ request.user.email }}">{{ user.email }}</a></td>
+                </tr>
+                </tbody>
+              </table>
+
+              <div class="pt-4">
+                <!--Edit profile if profile is for the logged in user-->
+                {%if request.user.username == user.username %}
+                  <img class="edit-btn" style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/pencil-square.svg' %}">
+                  <img data-username="{{ user.username }}" class="save-btn d-none" style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/save.svg' %}">
+                  <img data-username="{{ user.username }}" class="close-btn d-none" style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/x-square.svg' %}">
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="flush-headingTwo">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
+              BIO INFORMATION
+            </button>
+          </h2>
+          <div id="flush-collapseTwo" class="accordion-collapse collapse" aria-labelledby="flush-headingTwo"
+               data-bs-parent="#accordionFlushExample">
+            <div class="accordion-body">
+              <div id="bio">
+                {{ user.userbio.bio }}
+              </div>
+
+              <div class="pt-4">
+                <!--Edit profile if profile is for the logged in user-->
+                {%if request.user.username == user.username %}
+                  <img class="edit-btn" style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/pencil-square.svg' %}">
+                  <img data-username="{{ user.username }}" class="save-btn d-none" style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/save.svg' %}">
+                  <img data-username="{{ user.username }}" class="close-btn d-none" style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/x-square.svg' %}">
+                {% endif %}
+              </div>
+
+
+            </div>
+          </div>
+        </div>
+        {% if request.user.username == user.username %}
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="flush-headingThree">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
+              LOGIN INFORMATION
+            </button>
+          </h2>
+          <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree"
+               data-bs-parent="#accordionFlushExample">
+            <div class="accordion-body">
+              <!-- Show this info if profile page is for the logged in user -->
+              {%if request.user.username == user.username %}
+              <div>
+                <table class="table table-borderless">
+                  <tbody>
+                  <tr>
+                    <td class="ps-0 td_width text-muted">Username:</td>
+                    <td class="ps-0">{{ user.username }}</td>
+                  </tr>
+                  <tr>
+                    <td class="ps-0 text-muted">Password:</td>
+                    <td class="ps-0"><a href="{% url 'change-password' user.username %}">Change</a></td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="flush-headingFour">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#flush-collapseFour" aria-expanded="false" aria-controls="flush-collapseFour">
+              UPDATE AVATAR
+            </button>
+          </h2>
+          <div id="flush-collapseFour" class="accordion-collapse collapse" aria-labelledby="flush-headingFour"
+               data-bs-parent="#accordionFlushExample">
+            <div class="accordion-body">
+              <!-- Show this info if profile page is for the logged in user -->
+              {% if request.user.username == user.username %}
+
+              <!--Display form for changing avatar-->
+
+              <form id="avatar-form" class="" action="{% url 'profile' user.username %}" method="post"
+                    enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="input-group">
+                  {{ form.avatar }}
+                  <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+                  <button type="reset" class="btn btn-danger btn-sm">Close</button>
+
+                </div>
+
+              </form>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="flush-headingFive">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#flush-collapseFive" aria-expanded="false" aria-controls="flush-collapseFive">
+              UPDATE SOCIAL LINKS
+            </button>
+          </h2>
+          <div id="flush-collapseFive" class="accordion-collapse collapse" aria-labelledby="flush-headingFive"
+               data-bs-parent="#accordionFlushExample">
+            <div class="accordion-body">
+              <!-- only if user is the logged in user -->
+              {% if request.user.username == user.username %}
+              <!-- Alert if success -->
+              <div id="alert-social" class="alert alert-info d-none" role="alert">
+                Social icons have been successfully updated!
+              </div>
+
+              <!--Display form for changing social links-->
+              <form id="social-form" class="" action="{% url 'edit-profile' user.username %}" method="post"
+              ">
+              {% csrf_token %}
+              <div class="mt-2 mb-2 input-group-sm">
+                <label class="form-label text-muted sm_font">Linkedin</label>
+                {{ social.linkedin }}
+              </div>
+              <div class="mt-2 mb-2 input-group-sm">
+                <label class="form-label text-muted sm_font">Github</label>
+                {{ social.github }}
+              </div>
+              <div class="mt-2 mb-2 input-group-sm">
+                <label class="form-label text-muted sm_font">Youtube</label>
+                {{ social.youtube }}
+              </div>
+              <div class="mt-2 mb-3 input-group-sm">
+                <label class="form-label text-muted sm_font">Twitter</label>
+                {{ social.twitter }}
+              </div>
+              <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+              <button type="reset" class="btn btn-danger btn-sm">Close</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+    <div class="pt-5 d-flex flex-row">
+      <a href="{{ user.usersocial.linkedin }}" target="_blank" id="linkedin"><img class="ms-3 me-3" width="30px" height=30px" style="cursor: pointer;" src="{% static 'images/linkedin.png' %}"></a>
+      <a href="{{ user.usersocial.github }}" target="_blank" id="github" ><img class="me-3" width="30px" height=30px" style="cursor: pointer;" src="{% static 'images/github.png' %}"></a>
+      <a href="{{ user.usersocial.youtube }}" target="_blank" id="youtube" ><img class="me-3" height="30px" width="40px" style="cursor: pointer;" src="{% static 'images/youtube.png' %}"></a>
+      <a href="{{ user.usersocial.twitter }}" target="_blank" id="twitter" ><img height="30px" width="40px" style="cursor: pointer;" src="{% static 'images/twitter.png' %}"></a>
+
+    </div>
+  </div>
+  <div class="col-md-2 d-flex flex-column align-items-center"></div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+
+<script>
+  var update_profile_url = '{% url 'profile' 1234 %}'
+  var edit_profile_url = '{% url 'edit-profile' 1234 %}'
+  var username = '{{ user.username }}'
+</script>
+
+
+<script src="{% static 'custom/js/profile.js' %}"></script>
+
+</script>
+{% endblock %}

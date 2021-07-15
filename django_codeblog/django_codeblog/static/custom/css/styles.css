@@ -1,0 +1,146 @@
+h4, .cust_text {
+    color : #3399ff ! important
+}
+
+.badge_color {
+    background-color : #F1F0F0;
+}
+
+.btn_color {
+    background-color : #3399ff;
+    color : #ffffff
+}
+
+.sm_font{
+    font-size: 14px
+}
+
+/* style bootstrap form fields for adding articles */
+.form_inputs{
+    border-top-style: hidden ! important;
+    border-right-style: hidden ! important;
+    border-left-style: hidden ! important;
+    -webkit-appearance:none ! important;
+    box-shadow: none !important;
+    padding: 0 ! important;
+    margin: 0 ! important
+}
+
+.form_title {
+    font-size: 32px ! important;
+    color: #3399FF ! important;
+}
+
+.form_subtitle {
+    font-size: 24px ! important;
+    color: #292b2c ! important;
+}
+/* END - style bootstrap form fields for adding articles */
+
+/* Style comment Area */
+.comment-image {
+    flex: 5%;
+}
+
+.comment-text {
+    flex: 95%;
+}
+
+.comment-name{
+    color: #3399FF ! important;
+}
+
+/* END - Style comment Area */
+
+/* background color when editing an element */
+.edit-element{
+    background-color: #f2f2f2 ! important;
+    padding: 0.50rem ! important;
+    border-radius: 10px ! important;
+}
+
+.edit-element-bio{
+    /*background-color: #C1D5EA ! important; */
+    background-color: #f2f2f2 ! important;
+    padding: 0.5rem ! important;
+    border-radius: 10px ! important;
+    border-bottom: 2px solid #3399ff ! important;
+}
+
+/* User profile table td width */
+
+.td_width {
+    width: 20% ! important;
+}
+
+/* remove underline from links */
+a {
+    text-decoration: none;
+}
+
+ul {
+list-style-type: none ! important;
+}
+
+/* Min Width 1201px */
+@media only screen and (min-width: 1201px) {
+    .view-article {
+        padding-left:60px ! important;
+        padding-right:60px ! important;
+    }
+}
+
+
+/* Max Width 1200px */
+@media only screen and (min-width: 993px) and (max-width: 1200px) {
+
+}
+
+
+/* Max Width 992px */
+@media only screen and (min-width: 768px) and (max-width: 992px) {
+
+}
+
+
+/* Max Width 767px */
+@media only screen and (min-width: 576px) and (max-width: 767px) {
+    .profile-custom{
+        padding: 50px ! important;
+        display: flex ! important;
+        flex-direction: column ! important;
+    }
+
+    .profile-custom>*:first-child {
+        text-align: center ! import;
+        align-self: center ! important;
+    }
+
+    .td_width {
+        width: 40% ! important;
+    }
+}
+
+/* Max Width 575px */
+@media only screen and (max-width: 575px) {
+    .profile-custom{
+        padding: 50px ! important;
+        display: flex ! important;
+        flex-direction: column ! important;
+    }
+
+    .profile-custom>*:first-child {
+        text-align: center ! import;
+        align-self: center ! important;
+        padding-bottom: 20px ! important;
+    }
+
+    .td_width {
+        width: 40% ! important;
+    }
+
+}
+
+
+
+

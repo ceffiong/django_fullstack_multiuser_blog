@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+   All articles
+{% endblock %}
+
+{% block content %}
+  <div class="row mt-5">
+    <div class="col-md-8">
+
+      <!-- display flash message if available-->
+      {% if messages %}
+        <div class="alert alert-primary" role="alert">
+          {% for msg in messages %}
+          <p>{{ msg }}</p>
+          {% endfor %}
+        </div>
+
+      {% endif %}
+
+
+
+      <!-- Display the articles -->
+      {% for article in articles %}
+        <div class="d-flex flex-row mb-2">
+          <div class="flex-child me-3">
+            <img style="opacity: 0.98; border-radius: 5px; max-height: 150px; max-width: 150px;"  class="img-fluid" src="{{ article.cover_image.url }}" alt="{{ title }}">
+          </div>
+          <div class="flex-child">
+            <a style="text-decoration: none;" href="{% url 'get-article' article.slug %}"><h4>{{ article.title }}</h4></a>
+            <h6 class="text-muted">{{ article.subtitle }} </h6>
+            <p class="sm_font text-muted">
+              <img width="16px" height="16px" src="{% static 'bootstrap-icons/person.svg' %}">
+              <a href="{% url 'profile' article.created_by.username %}">{{ article.created_by.first_name }} {{ article.created_by.last_name }}</a> in
+              <span class="cust_text pe-2">
+                <a href="{% url 'get-articles-by-cat' article.category.category %}"> {{ article.category }} </a>
+              </span>
+              <img width="14px" height="14px" src="{% static 'bootstrap-icons/calendar.svg' %}">  {{ article.created_at }}
+            </p>
+          </div>
+        </div>
+      <hr class="mt-0">
+      {% endfor %}
+
+
+      <!-- Display the articles
+      {% for article in articles %}
+        <div class="p-2 mb-2 bg-white text-dark">
+          <h4><img src="{% static 'bootstrap-icons/list.svg' %}" alt="Bootstrap" width="32" height="32"> <a style="text-decoration: none;" href="{% url 'get-article' article.slug %}">{{ article.title }}</a></h4>
+          <h6 class="text-muted">{{ article.subtitle }} </h6>
+          <hr class="mt-0">
+          <p class="sm_article_createdby text-muted"><img width="16px" height="16px" src="{% static 'bootstrap-icons/person.svg' %}"> <a href="{% url 'profile' article.created_by.username %}">{{ article.created_by.first_name }} {{ article.created_by.last_name }}</a> in <span class="cust_text pe-2"><a href="{% url 'get-articles-by-cat' article.category.category %}"> {{ article.category }} </a></span>   <img width="14px" height="14px" src="{% static 'bootstrap-icons/calendar.svg' %}">  {{ article.created_at }} </p>
+        </div>
+      {% endfor %} -->
+
+      <!-- Show pagination button if there is no error -->
+      {% if not error %}
+        <nav aria-label="Page navigation example">
+          <ul class="pagination">
+            {% if page_obj.has_previous %}
+
+            <li class="page-item">
+              <a class="page-link" href="?page=1">
+                <img style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/skip-start.svg' %}">
+              </a>
+            </li>
+
+
+            <li>
+              <a class="page-link" href="?page=1">
+                <img style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/arrow-left-square.svg' %}">
+              </a>
+            </li>
+            {% endif %}
+
+
+            <li class="page-item"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                <img style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/arrow-right-square.svg' %}">
+              </a>
+            </li>
+
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                <img style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/skip-end.svg' %}">
+              </a>
+            </li>
+
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+    </div>
+
+    <!--Loop through and display all categories-->
+    <div class="col-md-4 px-5">
+      <h5 class="text-muted mb-4">Categories</h5>
+
+      {% for c in category_list.data %}
+        <a href="{%url 'get-articles-by-cat' c.category.category %}">
+          <button type="button" class="btn badge_color rounded-pill mt-2 mb-2 text-muted">
+            {{ c.category.category }}<span class="badge bg-secondary ms-2">{{ c.number }}</span>
+          </button>
+        </a>
+      {% endfor %}
+
+      <a href="{%url 'all-articles'  %}">
+          <button type="button" class="btn badge_color rounded-pill mt-2 mb-2 text-muted">
+            All<span class="badge bg-secondary ms-2">{{ category_list.all }}</span>
+          </button>
+      </a>
+
+      <!--Featured article is simply the latest article-->
+      {% if featured %}
+      <h5 class="text-muted mt-4 mb-4">Featured articles</h5>
+      <div>
+        <div class="card" style="border-radius: 10px;">
+          <img style="opacity: 0.98; border-radius: 10px;" src="{{ featured.cover_image.url }}" class="card-img-top" alt="{{ featured.title }}">
+          <div class="card-body">
+            <h5 class="card-title">{{ featured.title }}</h5>
+            <p class="card-text">{{ featured.subtitle }}</p>
+            <a href="{% url 'get-article' featured.slug %}" class="btn btn_color">View</a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,587 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+
+{% block content %}
+<div class="row mt-5">
+  {% if article_found %}
+  <div class="col-sm-12 col-md-12 col-lg-2 col-xl-2"></div>
+  <div class="col-sm-12 col-md-12 col-lg-8 col-xl-8 view-article">
+
+    <!-- Message and error alert display -->
+    {% if messages %}
+    <div class="alert alert-primary" role="alert">
+      {% for msg in messages %}
+      <p>{{ msg }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div id="alert-article-msg" class="alert alert-danger pb-4 d-none" role="alert"></div>
+
+    <!--Display select article (title, subtitle, content etc -->
+    <div class="p-3 mb-2 bg-white text-dark">
+      <h2 id="article-title" class="cust_text ">{{ title }}</h2>
+      <h5 id="article-subtitle" class="text-muted">{{ subtitle }}</h5>
+      <div class="d-flex flex-row">
+        <div class="comment-image">
+          <img width="30px" height="30px" class="img-fluid rounded-circle "
+               src="{{ created_by.useravatar.avatar.url }}">
+        </div>
+        <div class="comment-text">
+          <span class="sm_font pe-2 text-muted"><a href="{% url 'profile' created_by.username %}">{{ created_by.first_name }} {{ created_by.last_name }}</a> in <span
+                  id="article-category"><a
+                  href="{% url 'get-articles-by-cat' category %}"> {{ category }}</a></span></span>
+
+          <img width="14px" height="14px" src="{% static 'bootstrap-icons/calendar.svg' %}">
+          <span id="article-updated-at" class="sm_font ps-2 text-muted">Last updated: {{ updated_at }}</span>
+          {% if request.user.username == created_by.username %}
+          <span>
+              <img data-slug="{{ slug }}" id="edit-article-icon" style="cursor: pointer;" width="20px" height="20px"
+                   src="{% static 'bootstrap-icons/pencil-square.svg' %}">
+              <img data-slug="{{ slug }}" id="save-article-icon" class="d-none" style="cursor: pointer;" width="20px"
+                   height="20px" src="{% static 'bootstrap-icons/save.svg' %}">
+              <img data-slug="{{ slug }}" id="close-article-icon" class="d-none" style="cursor: pointer;" width="20px"
+                   height="20px" src="{% static 'bootstrap-icons/x-square.svg' %}">
+            </span>
+          {% endif %}
+        </div>
+      </div>
+      <div>
+
+        <div class="mt-4 mb-4">
+          <img id="article-cover-image"  class="img-fluid" src="{{ cover_image.url }}" alt="{{ title }}">
+        </div>
+        <div class="pt-3">
+          <button data-bs-toggle="modal" data-bs-target="#image_modal" type="button" class="btn btn-sm btn-secondary">Change Image</button>
+
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="image_modal" tabindex="-1" aria-labelledby="image_modalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-body">
+                <!--File input-->
+                <form id="article-image-form" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <div class="input-group">
+                    {{ form.cover_image }}
+                    <button class="btn btn-outline-secondary" type="submit" id="inputGroup">Upload</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="article-content" class="mt-4">
+        {{ content }}
+      </div>
+
+      <!--We need the list of categories since this HTML elememts are used for both displaying and editing the article
+        During editing mode, user should be able to select a different category for the article
+      -->
+      <div id="category-div" class="mt-4 mb-4 d-none">
+        <select id="select-article-category" class="form-select form-select-sm" aria-label="Default select example">
+          {% for cat in categories %}
+          {% if cat == category %}
+          <option selected value="{{cat.category_id}}">{{cat.category}}</option>
+          {% else %}
+          <option value="{{cat.category_id}}">{{cat.category}}</option>
+          {% endif %}
+
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!--A comment form for adding comment is displayed
+      Comment is added via ajax so as not to reload the page
+    -->
+    <div class="p-3 mb-2 bg-white text-dark">
+      <hr>
+
+      <div id="alert-comment-msg" class="alert alert-danger pb-4 d-none" role="alert"></div>
+
+      <form id="comment-form">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="commentTextAarea" class="form-label"><h5>{% if comments %} Add your comment {% else %} Be the
+            first to add a comment {% endif %}</h5></label>
+          {{ add_comment_form.as_p }}
+        </div>
+        <button type="submit" id="submit_comment" class="btn btn_color">Save</button>
+      </form>
+
+      <!--Display list of comments for this article. -->
+      <span id="comment-area">
+        <div class="mt-5 accordion" id="accordionPanelsStayOpenExample">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true"
+                      aria-controls="panelsStayOpen-collapseOne">
+                <h5>Comments <span class="badge bg-secondary">{{ comments.count }}</span> </h5>
+              </button>
+            </h2>
+            <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show"
+                 aria-labelledby="panelsStayOpen-headingOne">
+              <div class="accordion-body">
+                {% for comment in comments %}
+                  <div class="d-flex pt-2">
+                    <div class="comment-image">
+                      <img width="30px" height="30px" class="img-fluid rounded-circle"
+                           src="{{ comment.created_by.useravatar.avatar.url }}">
+                      </div>
+                      <div class="comment-text">
+                        <h5 class="comment-name ps-2"><a href="{% url 'profile' comment.created_by.username %}">{{ comment.created_by.first_name }} {{ comment.created_by.last_name }} </a></h5>
+                        <p id="comment-{{ comment.comment_id }}" class="card-text ps-2">{{ comment.comment }}</p>
+                        <p class="card-text ps-2">
+                          <small id="comment-{{ comment.comment_id }}-updated_at" class="text-muted">Last updated: {{ comment.updated_at}}</small>
+                          {% if request.user.username == comment.created_by.username %}
+                          <span>
+                            <img data-comment="comment-{{ comment.comment_id }}"
+                                 id="comment-{{ comment.comment_id }}-edit-icon" class="edit-comment-icon"
+                                 style="cursor: pointer;" width="20px" height="20px"
+                                 src="{% static 'bootstrap-icons/pencil-square.svg' %}">
+                            <img data-comment="comment-{{ comment.comment_id }}" data-id="{{ comment.comment_id }}"
+                                 data-comment="comment-{{ comment.comment_id }}"
+                                 id="comment-{{ comment.comment_id }}-save-icon" class="save-comment-icon d-none"
+                                 style="cursor: pointer;" width="20px" height="20px"
+                                 src="{% static 'bootstrap-icons/save.svg' %}">
+                            <img data-comment="comment-{{ comment.comment_id }}" data-id="{{ comment.comment_id }}"
+                                 id="comment-{{ comment.comment_id }}-close-icon" class="close-comment-icon d-none"
+                                 style="cursor: pointer;" width="20px" height="20px"
+                                 src="{% static 'bootstrap-icons/x-square.svg' %}">
+                          </span>
+                          {% endif %}
+                        </p>
+
+                      </div>
+                  </div>
+                  <hr>
+                {% endfor %}
+              </div>
+
+              <!--Pagination is used.
+              TODO: Change to ajax so page is not refreshed after user clicks the pagination button
+              -->
+              <div class="mt-4 ps-4">
+                <nav aria-label="Page navigation example">
+                  <ul class="pagination">
+                  {% if page_obj.has_previous %}
+
+                  <li class="page-item">
+                    <a class="page-link" href="?page=1">
+                      <img style="cursor: pointer;" width="20px" height="20px"
+                           src="{% static 'bootstrap-icons/skip-start.svg' %}">
+                    </a>
+                  </li>
+
+
+                  <li>
+                    <a class="page-link" href="?page=1">
+                      <img style="cursor: pointer;" width="20px" height="20px"
+                           src="{% static 'bootstrap-icons/arrow-left-square.svg' %}">
+                    </a>
+                  </li>
+                  {% endif %}
+
+
+                  <li class="page-item"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+
+                  {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                      <img style="cursor: pointer;" width="20px" height="20px"
+                           src="{% static 'bootstrap-icons/arrow-right-square.svg' %}">
+                    </a>
+                  </li>
+
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                      <img style="cursor: pointer;" width="20px" height="20px"
+                           src="{% static 'bootstrap-icons/skip-end.svg' %}">
+                    </a>
+                  </li>
+
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+
+
+            </div>
+          </div>
+        </div>
+      </span>
+    </div>
+  </div>
+
+  <div class="col-sm-12 col-md-12 col-lg-2 col-xl-2"></div>
+</div>
+{% else %}
+<div class="col-sm-12 col-md-12 col-lg-2 col-xl-2"></div>
+
+<!--Display message if article is not found-->
+<div class="col-sm-12 col-md-12 col-lg-8 col-xl-8">
+  <div class="alert alert-primary" role="alert">
+    <div class="text-muted text-center pb-5"><img style="color: blue;" width="300px" height="300px"
+                                                  src="{% static 'bootstrap-icons/emoji-frown.svg' %}"></div>
+    <h4 class="alert-heading">ARTICLE NOT FOUND!!!</h4>
+    <p> Sorry, an article with entered slug is not found in our database. Be sure you have entered the correct slug</p>
+    <hr>
+    <p>Click on this <a href="{% url 'all-articles' %}">link</a> to visit the list of articles</p>
+
+  </div>
+</div>
+<div class="col-sm-12 col-md-12 col-lg-2 col-xl-2"></div>
+{% endif %}
+</div>
+
+
+{% endblock %}
+
+{% block javascript %}
+
+<script type="text/javascript">
+/*  Article event handling */
+
+/* Article cover image form submit event */
+$("#article-image-form").submit(function(e){
+  e.preventDefault();
+  var data = new FormData($(this)[0]);
+  // make post ajax call
+  $.ajax({
+      type: 'POST',
+      url: "{% url 'update-article-image' slug %}",
+      headers: {
+        'X-CSRFToken': csrftoken
+      },
+      data: data,
+      processData: false,
+      contentType: false,
+      cache: false,
+      success: function (response) {
+        $("#article-cover-image").attr("src", response.photo);
+        $('#image_modal').modal('toggle');
+      },
+      error: function (response) {
+          // alert the error if any error occured
+          var err_msg = response["responseJSON"]["error"]
+          $("#alert-article-msg").text(err_msg).removeClass("d-none");
+      }
+  })
+
+
+});
+
+// Edit button click
+$("#edit-article-icon").click(function(){
+  //hide edit button and show save/close/select buttons
+  $(this).addClass("d-none");
+  $("#close-article-icon").removeClass("d-none");
+  $("#save-article-icon").removeClass("d-none");
+  $("#category-div").removeClass("d-none").addClass("edit-element");
+
+  //show the file field
+  $("#article-cover").removeClass("d-none");
+
+  //make article fields editable
+  $("#article-title").prop('contenteditable', 'true').addClass("edit-element").focus();
+  $("#article-subtitle").prop('contenteditable', 'true').addClass("edit-element");
+  $("#article-content").prop('contenteditable', 'true').addClass("edit-element");
+
+
+});
+
+//Save button click
+$("#save-article-icon").click(function(){
+  //get the title, subtitle and content
+  var title = $("#article-title").text();
+  var subtitle = $("#article-subtitle").text();
+  var content = $("#article-content").text();
+  var article_cover = $("#article-cover").val();
+
+  //get the category value selected
+  var category_id = $("#select-article-category").val();
+  var category = $("#select-article-category option:selected").text()
+
+
+  //send a put request to view (backend)
+  $.ajax({
+    type: 'PUT',
+    url: "{% url 'edit-article' slug %}",
+    headers: {
+      'Content-Type':'application/json',
+      'X-CSRFToken': csrftoken
+    },
+    data: JSON.stringify({
+      'title': title,
+      'subtitle' : subtitle,
+      'content' : content,
+      'category' : category_id,
+      'article_cover': article_cover
+    }),
+    success: function (response) {
+      // updated elements
+      let date = new Date(Date.parse(response.updated_at));
+      $("#article-updated-at").text("Last updated: " + date.toUTCString());
+      $("#article-title").text(title);
+      $("#article-subtitle").text(subtitle);
+      $("#article-content").text(content);
+      $("#article-category").text(category)
+
+
+      //Hide save and close button and category select and show edit button also remove class and turn off editing
+      $("#close-article-icon").addClass("d-none");
+      $("#save-article-icon").addClass("d-none");
+      $("#edit-article-icon").removeClass("d-none");
+      $("#category-div").addClass("d-none");
+      $("#article-cover").addClass("d-none");
+
+      $("#article-title").prop('contenteditable', 'false').removeClass("edit-element").focus();
+      $("#article-subtitle").prop('contenteditable', 'false').removeClass("edit-element");
+      $("#article-content").prop('contenteditable', 'false').removeClass("edit-element");
+
+    },
+    error: function (response) {
+        // alert the error if any error occured
+        var err_msg = response["responseJSON"]["error"]
+        $("#alert-article-msg").text(err_msg).removeClass("d-none");
+     }
+  })
+
+
+});
+
+// Handle close button event
+$("#close-article-icon").click(function(){
+
+  //if user clicks edit then types in something and then click close. We want to show the old text not the unsaved one
+  //we need to do a GET request
+
+  $.ajax({
+    type: 'GET',
+    url: "{% url 'edit-article' slug %}",
+    headers: {
+      'Content-Type':'application/json',
+      'X-CSRFToken': csrftoken
+    },
+    success: function (response) {
+      // updated elements
+      let date = new Date(Date.parse(response.updated_at));
+      $("#article-updated-at").text("Last updated: " + date.toUTCString());
+      $("#article-title").text(response.title);
+      $("#article-subtitle").text(response.subtitle);
+      $("#article-content").text(response.content);
+
+      //Hide save and close button and category select and show edit button also remove class and turn off editing
+      $("#close-article-icon").addClass("d-none");
+      $("#save-article-icon").addClass("d-none");
+      $("#edit-article-icon").removeClass("d-none");
+      $("#category-div").addClass("d-none");
+      $("#article-cover").addClass("d-none");
+
+      $("#article-title").prop('contenteditable', 'false').removeClass("edit-element").focus();
+      $("#article-subtitle").prop('contenteditable', 'false').removeClass("edit-element");
+      $("#article-content").prop('contenteditable', 'false').removeClass("edit-element");
+
+
+    },
+    error: function (response) {
+        // alert the error if any error occured
+        var err_msg = response["responseJSON"]["error"]
+        $("#alert-article-msg").text(err_msg).removeClass("d-none");
+     }
+  })
+
+  return false; //to prevent button click event from firing twice
+
+});
+
+
+/* article event ends */
+
+
+/* Comment event Handling begins*/
+
+$('#comment-form').submit(function(e){
+    //Prevent reloading
+    e.preventDefault();
+    var serializedData = $(this).serialize();
+
+    $.ajax({
+        type: 'POST',
+        url: "{% url 'add-comment' slug %}",
+        data: serializedData,
+        success: function (response) {
+
+            // 1. clear the form.
+            $("#comment-form").trigger('reset');
+
+            //focus cursor in comment text area
+            $('#commentTextAarea').focus();
+
+            var comment = JSON.parse(response["comment"]);
+            var fields = comment[0]["fields"];
+
+            var user = JSON.parse(response["user"]);
+            var comment_id = JSON.parse(response["id"]);
+
+            $("#comment-area").prepend(
+                `
+                <div class="d-flex pt-2">
+                  <div class="comment-image">
+                    <img width="30px" height="30px" class="img-fluid rounded-circle"
+                         src="{% static 'images/profile.png' %}">
+                    </div>
+                    <div class="comment-text">
+                      <h5 class="comment-name ps-2"><a href="{% url 'profile' user.username %}">${user.name}</a></h5>
+                      <p id="comment-${comment_id}" class="card-text ps-2">${fields["comment"]||""}</p>
+                      <p class="card-text ps-2">
+                        <small id="comment-${comment_id}-updated_at"  class="text-muted">Last updated: ${fields["updated_at"]||""}</small>
+                        <span>
+                          <img data-comment="comment-${comment_id}" id="comment-${comment_id}-edit-icon" class="edit-comment-icon" style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/pencil-square.svg' %}">
+                          <img data-comment="comment-${comment_id}" data-id ="${comment_id}" data-comment="comment-${comment_id}" id="comment-${comment_id}-save-icon" class="save-comment-icon d-none" style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/save.svg' %}">
+                          <img data-comment="comment-${comment_id}" data-id ="${comment_id}" id="comment-${comment_id}-close-icon" class="close-comment-icon d-none" style="cursor: pointer;" width="20px" height="20px" src="{% static 'bootstrap-icons/x-square.svg' %}">
+                        </span>
+                      </p>
+                    </div>
+                </div>
+                <hr>
+                `
+            )
+        },
+        error: function (response) {
+            // alert the error if any error occured
+            var err_msg = response["responseJSON"]["error"]
+            $("#alert-comment-msg").text(err_msg).removeClass("d-none");
+        }
+    })
+});
+
+// Edit comment
+
+// Make comment field editable when edit icon is clicked
+
+$("span").on("click", "img.edit-comment-icon", function(){
+  var comment = $(this).attr("data-comment");
+  $("#"+comment).prop('contenteditable', 'true').addClass("edit-element").focus();
+  $(this).addClass("d-none");
+  $("#"+comment+"-close-icon").removeClass("d-none");
+  $("#"+comment+"-save-icon").removeClass("d-none");
+});
+
+
+
+// Close the edit and close icon and show the edit icon when close button is clicked
+// set editable to false
+
+$("span").on("click", "img.close-comment-icon", function(){
+  var comment_id_attr = $(this).attr("data-comment");
+
+  //get the comment id
+  var comment_id = $(this).attr("data-id");
+
+  //if user clicks edit then types in something and then click close. We want to show the old text not the unsaved one
+  //we need to do a GET request
+
+  $.ajax({
+    type: 'GET',
+    url: "{% url 'edit-comment' 1234 %}".replace(/1234/, comment_id.toString()),
+    headers: {
+      'Content-Type':'application/json',
+      'X-CSRFToken': csrftoken
+    },
+    success: function (response) {
+      $("#comment-"+comment_id).text(response.comment)
+      $("#"+comment_id_attr).prop('contenteditable', 'false').removeClass("edit-element");
+      $("#"+comment_id_attr+"-close-icon").addClass("d-none");
+      $("#"+comment_id_attr+"-save-icon").addClass("d-none");
+      $("#"+comment_id_attr+"-edit-icon").removeClass("d-none");
+
+    },
+    error: function (response) {
+        // alert the error if any error occured
+        var err_msg = response["responseJSON"]["error"]
+        $("#alert-comment-msg").text(err_msg).removeClass("d-none");
+     }
+  })
+
+  return false; //to prevent button click event from firing twice
+
+});
+
+// Handle event when save button is clicked
+
+$(".save-comment-icon").click(function(){
+  //get id attr of the comment
+  var comment_id_attr = $(this).attr("data-comment");
+
+  //get the text using the attribute
+  var comment = $("#"+comment_id_attr).text();
+  var comment_id = $(this).attr("data-id");
+
+  //get article slug - already in URL no need to pass
+  var article_slug = $(this).attr("data-slug");
+
+  $.ajax({
+    type: 'PUT',
+    url: "{% url 'edit-comment' 1234 %}".replace(/1234/, comment_id.toString()),
+    headers: {
+      'Content-Type':'application/json',
+      'X-CSRFToken': csrftoken
+    },
+    data: JSON.stringify({'comment': comment}),
+    success: function (response) {
+      let date = new Date(Date.parse(response.updated_at));
+      $("#comment-"+comment_id+"-updated_at").text("Last updated: " + date.toUTCString());
+      $("#comment-"+comment_id).text(comment)
+
+      //Hide save and close button and show edit button also remove class and turn off editing
+      $("#"+comment_id_attr).prop('contenteditable', 'false').removeClass("edit-element");
+      $("#"+comment_id_attr+"-close-icon").addClass("d-none");
+      $("#"+comment_id_attr+"-save-icon").addClass("d-none");
+      $("#"+comment_id_attr+"-edit-icon").removeClass("d-none");
+
+    },
+    error: function (response) {
+        // alert the error if any error occured
+        var err_msg = response["responseJSON"]["error"]
+        $("#alert-comment-msg").text(err_msg).removeClass("d-none");
+     }
+  })
+
+});
+
+
+/*Get all comments and display in comment area.
+
+$( document ).ready(function() {
+  $.ajax({
+        type: 'GET',
+        url: "{% url 'add-comment' slug %}",
+        success: function (response) {
+            console.log(response)
+        },
+        error: function (response) {
+            // alert the error if any error occured
+            var err_msg = response["responseJSON"]["error"]
+            $("#alert-comment-msg").text(err_msg).removeClass("d-none");
+        }
+    })
+}); */
+
+
+
+</script>
+
+{% endblock %}

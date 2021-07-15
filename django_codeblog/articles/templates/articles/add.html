@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+   Add a new article
+{% endblock %}
+
+{% block content %}
+<div class="row mt-5">
+  <div class="col-md-2"></div>
+  <div class="col-md-8">
+    <div class="p-3 mb-2 bg-white text-dark">
+
+      <!--Display error - Bootstrap alert-->
+      {% if is_error %}
+        <div class="alert alert-info" role="alert">
+          <h4 class="alert-heading">Error!</h4>
+          <p>Could not add data. Please try again later!</p>
+        </div>
+      {% endif %}
+
+      <!--Use Django form -->
+      <form action="{% url 'add-article' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="title" class="form-label text-muted sm_font">Title</label>
+          {{ form.title }}
+        </div>
+
+        <div class="mb-3">
+          <label for="subtitle" class="form-label text-muted sm_font">Subtitle</label>
+          {{ form.subtitle }}
+        </div>
+
+        <div class="mb-5 ">
+          <label for="cover" class="form-label text-muted sm_font">Cover photo</label>
+          {{ form.cover_image }}
+        </div>
+
+        <div class="mb-5">
+          <label for="category" class="form-label text-muted sm_font">Category</label>
+          {{ form.category }}
+        </div>
+
+        <div class="mb-5">
+          <label for="content" class="form-label text-muted sm_font">Content</label>
+          {{ form.content }}
+        </div>
+
+
+        <button type="submit" class="btn btn_color">Publish</button>
+        <button type="reset" class="btn btn-secondary">Cancel</button>
+      </form>
+    </div>
+
+  </div>
+
+  <div class="col-md-2"></div>
+</div>
+{% endblock %}
