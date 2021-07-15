@@ -20,9 +20,9 @@ The diagram below shows the database schema exported from mysql phpmyadmin:
   <li> Django - python -m pip install Django </li>
   <li> MySQL DB server e.g. WAMP/MAMP, XAMPP etc </li>
 </ul>
-<br><br>
+<br>
 
-To launch app do:
+<b>To launch app do:</a>
 <ol>
   <li><b>python manage.py runserver</b> -> This command starts a webserver</li>
   <li>Open your webbrowser and type <b>localhost:8000/articles</b></li>
