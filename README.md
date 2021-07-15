@@ -22,7 +22,7 @@ The diagram below shows the database schema exported from mysql phpmyadmin:
 </ul>
 <br>
 
-<b>To launch app do:</a>
+<b>To launch app do:</b>
 <ol>
   <li><b>python manage.py runserver</b> -> This command starts a webserver</li>
   <li>Open your webbrowser and type <b>localhost:8000/articles</b></li>
